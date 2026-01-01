@@ -21,6 +21,26 @@ resource "azurerm_resource_group" "esewa" {
   location = var.location
 }
 
+resource "kubernetes_secret" "docker_registry" {
+  metadata {
+    name      = "docker-hub-secret"
+    namespace = kubernetes_namespace.esewans.metadata[0].name
+  }
+
+  type = "kubernetes.io/dockerconfigjson"
+  
+  data = {
+    ".dockerconfigjson" = jsonencode({
+      auths = {
+        "https://index.docker.io/v1/" = {
+          username = var.dockerhub_username
+          password = var.dockerhub_password
+        }
+      }
+    })
+  }
+}
+
 # AKS Cluster
 resource "azurerm_kubernetes_cluster" "esewa" {
   name                = var.cluster_name
@@ -90,6 +110,9 @@ resource "kubernetes_deployment" "esewa_app" {
         labels = { app = "esewa-app" }
       }
       spec {
+        image_pull_secrets {
+          name = kubernetes_secret.docker_registry.metadata[0].name
+        }
         container {
           name  = "esewa-app"
           image = var.docker_image

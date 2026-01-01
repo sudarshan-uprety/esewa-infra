@@ -32,3 +32,17 @@ variable "docker_image" {
   description = "Docker image for the application"
   type        = string
 }
+
+variable "dockerhub_username" {
+  description = "Docker Hub username"
+  type        = string
+  sensitive   = true
+  default     = ""  # Leave empty to be provided via environment or secrets
+}
+
+variable "dockerhub_password" {
+  description = "Docker Hub password or access token"
+  type        = string
+  sensitive   = true
+  default     = ""  # Leave empty to be provided via environment or secrets
+}
