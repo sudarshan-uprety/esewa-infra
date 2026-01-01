@@ -130,7 +130,7 @@ resource "kubernetes_deployment" "esewa_app" {
           }
           readiness_probe {
             http_get {
-              path = /hello
+              path = "/hello"
               port = 8080
             }
             initial_delay_seconds = 5
