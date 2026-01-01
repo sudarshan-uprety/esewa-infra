@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'oracle-3' }
     environment {
         IMAGE_NAME = "sudarshanuprety/esewa"
         IMAGE_TAG  = "latest"
