@@ -1,0 +1,14 @@
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Git
+.DS_Store
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+.terraform.lock.hcl
