@@ -15,11 +15,13 @@ provider "azurerm" {
   features {}
 }
 
+# Resource Group
 resource "azurerm_resource_group" "esewa" {
   name     = var.resource_group_name
   location = var.location
 }
 
+# AKS Cluster
 resource "azurerm_kubernetes_cluster" "esewa" {
   name                = var.cluster_name
   location            = azurerm_resource_group.esewa.location
@@ -41,6 +43,7 @@ resource "azurerm_kubernetes_cluster" "esewa" {
   }
 }
 
+# Additional worker node pool
 resource "azurerm_kubernetes_cluster_node_pool" "workernode" {
   name                  = "workernode"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.esewa.id
@@ -54,6 +57,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "workernode" {
   }
 }
 
+# Kubernetes Provider
 provider "kubernetes" {
   host                   = azurerm_kubernetes_cluster.esewa.kube_config.0.host
   client_certificate     = base64decode(azurerm_kubernetes_cluster.esewa.kube_config.0.client_certificate)
@@ -61,8 +65,78 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.esewa.kube_config.0.cluster_ca_certificate)
 }
 
+# Namespace
 resource "kubernetes_namespace" "esewans" {
   metadata {
     name = var.namespace_name
+  }
+}
+
+# Kubernetes Deployment (Java App)
+resource "kubernetes_deployment" "esewa_app" {
+  metadata {
+    name      = "esewa-app"
+    namespace = kubernetes_namespace.esewans.metadata[0].name
+    labels = { app = "esewa-app" }
+  }
+
+  spec {
+    replicas = 2
+    selector {
+      match_labels = { app = "esewa-app" }
+    }
+    template {
+      metadata {
+        labels = { app = "esewa-app" }
+      }
+      spec {
+        container {
+          name  = "esewa-app"
+          image = var.docker_image
+          ports { container_port = 8080 }
+        }
+      }
+    }
+  }
+}
+
+# NodePort Service
+resource "kubernetes_service" "esewa_svc" {
+  metadata {
+    name      = "esewa-service"
+    namespace = kubernetes_namespace.esewans.metadata[0].name
+  }
+  spec {
+    selector = { app = "esewa-app" }
+    port {
+      port        = 8080
+      target_port = 8080
+      node_port   = 30080
+    }
+    type = "NodePort"
+  }
+}
+
+# (Optional) Ingress
+resource "kubernetes_ingress" "esewa_ingress" {
+  metadata {
+    name      = "esewa-ingress"
+    namespace = kubernetes_namespace.esewans.metadata[0].name
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+    }
+  }
+  spec {
+    rule {
+      http {
+        path {
+          path = "/"
+          backend {
+            service_name = kubernetes_service.esewa_svc.metadata[0].name
+            service_port = 8080
+          }
+        }
+      }
+    }
   }
 }

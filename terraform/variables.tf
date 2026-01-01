@@ -5,25 +5,30 @@ variable "resource_group_name" {
 }
 
 variable "location" {
-  description = "The Azure region to deploy resources"
+  description = "Azure region to deploy"
   type        = string
   default     = "southindia"
 }
 
 variable "cluster_name" {
-  description = "The name of the AKS cluster"
+  description = "AKS cluster name"
   type        = string
-  default     = "esewa-cluser"
+  default     = "esewa-cluster"
 }
 
 variable "dns_prefix" {
-  description = "DNS prefix for the AKS cluster"
+  description = "DNS prefix for AKS"
   type        = string
   default     = "esewa-aks"
 }
 
 variable "namespace_name" {
-  description = "The name of the Kubernetes namespace"
+  description = "Kubernetes namespace"
   type        = string
   default     = "esewans"
+}
+
+variable "docker_image" {
+  description = "Docker image for the application"
+  type        = string
 }

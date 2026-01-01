@@ -1,6 +1,9 @@
-output "client_certificate" {
-  value     = azurerm_kubernetes_cluster.esewa.kube_config.0.client_certificate
-  sensitive = true
+output "cluster_name" {
+  value = azurerm_kubernetes_cluster.esewa.name
+}
+
+output "resource_group_name" {
+  value = azurerm_resource_group.esewa.name
 }
 
 output "kube_config" {
@@ -8,10 +11,7 @@ output "kube_config" {
   sensitive = true
 }
 
-output "cluster_name" {
-  value = azurerm_kubernetes_cluster.esewa.name
-}
-
-output "resource_group_name" {
-  value = azurerm_resource_group.esewa.name
+output "client_certificate" {
+  value     = azurerm_kubernetes_cluster.esewa.kube_config.0.client_certificate
+  sensitive = true
 }
