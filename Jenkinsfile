@@ -3,7 +3,6 @@ pipeline {
     environment {
         IMAGE_NAME = "sudarshanuprety/esewa"
         IMAGE_TAG  = "latest"
-        TENANT_ID  = env.AZURE_TENANT_ID
     }
     stages {
         stage('Checkout Code') {
@@ -16,7 +15,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'AZURE_SP', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
                     sh '''
-                        az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $TENANT_ID
+                        az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
                         az account set --subscription <SUBSCRIPTION_ID>
                     '''
                 }
