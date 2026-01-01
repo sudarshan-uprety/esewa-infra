@@ -101,7 +101,7 @@ resource "kubernetes_deployment" "esewa_app" {
   }
 
   spec {
-    replicas = 2
+    replicas = 1
     selector {
       match_labels = { app = "esewa-app" }
     }
