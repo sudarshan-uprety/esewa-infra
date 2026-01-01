@@ -130,7 +130,7 @@ resource "kubernetes_deployment" "esewa_app" {
           }
           readiness_probe {
             http_get {
-              path = "/actuator/health"
+              path = /hello
               port = 8080
             }
             initial_delay_seconds = 5
