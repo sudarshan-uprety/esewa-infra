@@ -31,7 +31,7 @@ resource "azurerm_kubernetes_cluster" "esewa" {
   default_node_pool {
     name       = "default"
     node_count = 1
-    vm_size    = "Standard_B2s"
+    vm_size    = "Standard_D2s_v3"
   }
 
   identity {
