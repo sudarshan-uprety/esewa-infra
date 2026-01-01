@@ -158,8 +158,27 @@ resource "kubernetes_service" "esewa_svc" {
     port {
       port        = 80
       target_port = 8080
+      protocol    = "TCP"
     }
     type = "LoadBalancer"
+  }
+}
+
+resource "kubernetes_service" "esewa_nodeport" {
+  metadata {
+    name      = "esewa-nodeport"
+    namespace = kubernetes_namespace.esewans.metadata[0].name
+  }
+  spec {
+    selector = { app = "esewa-app" }
+    port {
+      name        = "http"
+      port        = 8080        # Service port
+      target_port = 8080        # Container port
+      node_port   = 30080       # Node port (external access via LoadBalancer)
+      protocol    = "TCP"
+    }
+    type = "NodePort"
   }
 }
 
