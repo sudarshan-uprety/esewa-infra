@@ -140,6 +140,11 @@ resource "kubernetes_deployment" "esewa_app" {
       }
     }
   }
+  timeouts {
+    create = "15m"
+    update = "15m"
+    delete = "10m"
+  }
 }
 
 # NodePort Service
