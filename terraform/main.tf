@@ -175,7 +175,7 @@ resource "kubernetes_service" "esewa_nodeport" {
       name        = "http"
       port        = 8080        # Service port
       target_port = 8080        # Container port
-      node_port   = 30080       # Node port (external access via LoadBalancer)
+      node_port   = 30081      # Node port (external access via LoadBalancer)
       protocol    = "TCP"
     }
     type = "NodePort"
