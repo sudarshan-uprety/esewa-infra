@@ -47,7 +47,7 @@ resource "azurerm_kubernetes_cluster" "esewa" {
 resource "azurerm_kubernetes_cluster_node_pool" "workernode" {
   name                  = "workernode"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.esewa.id
-  vm_size               = "Standard_DS2_v2"
+  vm_size               = "Standard_B2s_v2"
   enable_auto_scaling   = true
   min_count             = 1
   max_count             = 2
