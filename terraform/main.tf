@@ -133,14 +133,9 @@ resource "kubernetes_ingress" "esewa_ingress" {
       http {
         path {
           path = "/"
-          path_type = "Prefix"  # Required for networking.k8s.io/v1
           backend {
-            service {
-              name = "esewa-service"
-              port {
-                number = 8080
-              }
-            }
+            service_name = "esewa-service"
+            service_port = 8080
           }
         }
       }
