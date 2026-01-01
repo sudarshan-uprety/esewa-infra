@@ -18,7 +18,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'AZURE_SP', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
                     sh """
                         az login --service-principal -u '$AZURE_CLIENT_ID' -p '$AZURE_CLIENT_SECRET' --tenant '$AZURE_TENANT_ID'
-                        az account set --subscription '<SUBSCRIPTION_ID>'
+                        az account set --subscription '$AZURE_SUBSCRIPTION_ID'
                     """
                 }
             }
