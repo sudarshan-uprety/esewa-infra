@@ -147,7 +147,7 @@ resource "kubernetes_deployment" "esewa_app" {
   }
 }
 
-# NodePort Service
+# LoadBalancer servicee
 resource "kubernetes_service" "esewa_svc" {
   metadata {
     name      = "esewa-service"
@@ -156,11 +156,10 @@ resource "kubernetes_service" "esewa_svc" {
   spec {
     selector = { app = "esewa-app" }
     port {
-      port        = 8080
+      port        = 80
       target_port = 8080
-      node_port   = 30080
     }
-    type = "NodePort"
+    type = "LoadBalancer"
   }
 }
 
