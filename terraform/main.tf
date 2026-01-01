@@ -93,7 +93,9 @@ resource "kubernetes_deployment" "esewa_app" {
         container {
           name  = "esewa-app"
           image = var.docker_image
-          ports { container_port = 8080 }
+          port {
+             container_port = 8080 
+          }
         }
       }
     }
