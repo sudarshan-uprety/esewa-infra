@@ -122,7 +122,7 @@ resource "kubernetes_deployment" "esewa_app" {
           # Add liveness and readiness probes
           liveness_probe {
             http_get {
-              path = "/actuator/health"
+              path = "/hello"
               port = 8080
             }
             initial_delay_seconds = 30
