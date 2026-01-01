@@ -77,7 +77,7 @@ resource "kubernetes_deployment" "esewa_app" {
   metadata {
     name      = "esewa-app"
     namespace = kubernetes_namespace.esewans.metadata[0].name
-    labels = { app = "esewa-app" }
+    labels    = { app = "esewa-app" }
   }
 
   spec {
@@ -94,7 +94,24 @@ resource "kubernetes_deployment" "esewa_app" {
           name  = "esewa-app"
           image = var.docker_image
           port {
-             container_port = 8080 
+            container_port = 8080
+          }
+          # Add liveness and readiness probes
+          liveness_probe {
+            http_get {
+              path = "/actuator/health"
+              port = 8080
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 10
+          }
+          readiness_probe {
+            http_get {
+              path = "/actuator/health"
+              port = 8080
+            }
+            initial_delay_seconds = 5
+            period_seconds        = 5
           }
         }
       }
@@ -119,23 +136,29 @@ resource "kubernetes_service" "esewa_svc" {
   }
 }
 
-# (Optional) Ingress
-resource "kubernetes_ingress" "esewa_ingress" {
+resource "kubernetes_ingress_v1" "esewa_ingress" {
   metadata {
     name      = "esewa-ingress"
     namespace = kubernetes_namespace.esewans.metadata[0].name
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
+      "kubernetes.io/ingress.class"                = "nginx"
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
     }
   }
+  
   spec {
     rule {
       http {
         path {
-          path = "/"
+          path      = "/"
+          path_type = "Prefix"
           backend {
-            service_name = "esewa-service"
-            service_port = 8080
+            service {
+              name = kubernetes_service.esewa_svc.metadata[0].name
+              port {
+                number = 8080
+              }
+            }
           }
         }
       }
