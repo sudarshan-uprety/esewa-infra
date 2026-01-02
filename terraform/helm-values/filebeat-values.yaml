@@ -19,15 +19,15 @@ daemonset:
         username: "${ELASTICSEARCH_USERNAME}"
         password: "${ELASTICSEARCH_PASSWORD}"
   
-  extraVolumeMounts:
-    - name: varlog
-      mountPath: /var/log
-      readOnly: true
+  # extraVolumeMounts:
+  #   - name: varlog
+  #     mountPath: /var/log
+  #     readOnly: true
   
-  extraVolumes:
-    - name: varlog
-      hostPath:
-        path: /var/log
+  # extraVolumes:
+  #   - name: varlog
+  #     hostPath:
+  #       path: /var/log
 
 # Minimal RBAC
 rbac:
