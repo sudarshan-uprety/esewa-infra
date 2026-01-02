@@ -7,9 +7,10 @@ daemonset:
         paths:
           - /var/log/containers/*.log
       output.elasticsearch:
-        hosts: ['http://elasticsearch-master:9200']
+        hosts: ['https://elasticsearch-master:9200']
         username: "${ELASTICSEARCH_USERNAME}"
         password: "${ELASTICSEARCH_PASSWORD}"
+        ssl.verification_mode: none
   
   # extraVolumeMounts:
   #   - name: varlog
