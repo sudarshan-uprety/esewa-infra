@@ -262,7 +262,6 @@ resource "kubernetes_ingress_v1" "esewa_ingress" {
   }
   timeouts {
     create = "5m"
-    update = "5m"
     delete = "5m"
   }
 }
