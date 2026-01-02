@@ -347,16 +347,6 @@ resource "helm_release" "kibana" {
   disable_openapi_validation = true
   disable_webhooks           = true
   
-  set {
-    name  = "serviceAccount.create"
-    value = "false"
-  }
-  
-  set {
-    name  = "serviceAccount.name"
-    value = "default"  # Use default service account
-  }
-  
   wait_for_jobs = false
   
   depends_on = [
