@@ -15,7 +15,7 @@ resources:
     memory: "1Gi"
 
 # Elasticsearch connection
-elasticsearchHosts: ["https://elasticsearch-master:9200"]
+elasticsearchHosts: "http://elasticsearch-master:9200"
 
 # kibanaConfig:
 #   kibana.yml: |
@@ -25,8 +25,6 @@ elasticsearchHosts: ["https://elasticsearch-master:9200"]
 #     elasticsearch.password: "${ELASTICSEARCH_PASSWORD}"
 
 extraEnvs:
-  - name: ELASTICSEARCH_HOSTS
-    value: "https://elasticsearch-master:9200"
   - name: ELASTICSEARCH_USERNAME
     value: "elastic"
   - name: ELASTICSEARCH_SSL_VERIFICATIONMODE

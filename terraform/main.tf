@@ -329,7 +329,7 @@ resource "helm_release" "kibana" {
   disable_openapi_validation = true
   disable_webhooks           = true
 
-  wait_for_jobs = false
+  wait_for_jobs = true
 
   depends_on = [helm_release.elasticsearch]
 
