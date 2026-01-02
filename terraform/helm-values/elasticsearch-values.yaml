@@ -17,6 +17,7 @@ esConfig:
   elasticsearch.yml: |
     xpack.security.enabled: true
     xpack.security.transport.ssl.enabled: true
+    discovery.type: single-node
 
 # Disable expensive features for testing
 xpack:
