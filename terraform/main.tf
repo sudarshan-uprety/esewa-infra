@@ -308,6 +308,25 @@ resource "helm_release" "elasticsearch" {
   ]
 }
 
+# Cleanup conflicting Kibana resources before installation
+resource "null_resource" "kibana_cleanup" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      kubectl delete configmap kibana-kibana-helm-scripts -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
+      kubectl delete role pre-install-kibana-kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
+      kubectl delete rolebinding pre-install-kibana-kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
+      kubectl delete job pre-install-kibana-kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
+    EOT
+  }
+
+  triggers = {
+    # Run whenever the elasticsearch release changes or if we need a fresh start
+    elasticsearch_id = helm_release.elasticsearch.id
+  }
+
+  depends_on = [kubernetes_namespace.elk_stack]
+}
+
 # Deploy Kibana using external YAML
 resource "helm_release" "kibana" {
   name       = "kibana"
@@ -337,7 +356,10 @@ resource "helm_release" "kibana" {
   
   wait_for_jobs = false
   
-  depends_on = [helm_release.elasticsearch]
+  depends_on = [
+    helm_release.elasticsearch,
+    null_resource.kibana_cleanup
+  ]
   
   wait    = false
   timeout = 120
