@@ -244,6 +244,7 @@ resource "kubernetes_ingress_v1" "esewa_ingress" {
   
   spec {
     rule {
+      host = "esewa.sudarshan-uprety.com.np"
       http {
         path {
           path      = "/"
