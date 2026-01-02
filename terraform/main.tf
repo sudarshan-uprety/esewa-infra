@@ -344,6 +344,9 @@ resource "helm_release" "kibana" {
   force_update    = true
   cleanup_on_fail = true
   
+  disable_openapi_validation = true
+  disable_webhooks           = true
+  
   set {
     name  = "serviceAccount.create"
     value = "false"
@@ -361,8 +364,8 @@ resource "helm_release" "kibana" {
     null_resource.kibana_cleanup
   ]
   
-  wait    = false
-  timeout = 120
+  wait    = true
+  timeout = 600
 }
 
 
