@@ -314,18 +314,14 @@ resource "helm_release" "kibana" {
   repository = "https://helm.elastic.co"
   chart      = "kibana"
   namespace  = kubernetes_namespace.elk_stack.metadata[0].name
+  version    = "8.5.1"
   
+  # Use external YAML file
   values = [
-    <<-YAML
-    service:
-      type: LoadBalancer
-    elasticsearchHosts: ["http://elasticsearch-master:9200"]
-    YAML
+    file("${path.module}/helm-values/kibana-values.yaml")
   ]
   
-  skip_crds      = true
-  atomic         = false  # Don't rollback on failure
-  cleanup_on_fail = false
+  skip_crds = true
   
   set {
     name  = "serviceAccount.create"
@@ -333,20 +329,23 @@ resource "helm_release" "kibana" {
   }
   
   set {
-    name  = "extraServiceAccounts"
-    value = "null"
+    name  = "serviceAccount.name"
+    value = "default"  # Use default service account
   }
   
   set {
-    name  = "podSecurityPolicy.create"
-    value = "false"
+    name  = "hooks"
+    value = "null"
   }
+  
+  wait_for_jobs = false
   
   depends_on = [helm_release.elasticsearch]
   
   wait    = false
-  timeout = 60
+  timeout = 120
 }
+
 
 # Deploy Filebeat using external YAML
 resource "helm_release" "filebeat" {
