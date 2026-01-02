@@ -58,6 +58,11 @@ pipeline {
                         terraform import 'kubernetes_service.esewa_svc' esewans/esewa-service || true
                         terraform import 'kubernetes_ingress_v1.esewa_ingress' esewans/esewa-ingress || true
 
+                        # NEW: Import existing ELK Helm releases ---
+                        terraform import 'helm_release.elasticsearch' elk-stack/elasticsearch || true
+                        terraform import 'helm_release.kibana' elk-stack/kibana || true
+                        terraform import 'helm_release.filebeat' elk-stack/filebeat || true
+
                         # Plan & apply with all variables
                         terraform plan -out=tfplan \\
                             -var "docker_image=\${IMAGE_NAME}:\${IMAGE_TAG}" \\
