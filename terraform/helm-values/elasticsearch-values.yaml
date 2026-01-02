@@ -1,5 +1,4 @@
 replicas: 1
-minimumMasterNodes: 1
 
 resources:
   requests:
@@ -15,9 +14,9 @@ persistence:
 # Security (keep but with test settings)
 esConfig:
   elasticsearch.yml: |
-    xpack.security.enabled: true
-    xpack.security.transport.ssl.enabled: true
     discovery.type: single-node
+    xpack.security.enabled: false
+    xpack.security.transport.ssl.enabled: true
 
 # Disable expensive features for testing
 xpack:
