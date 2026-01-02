@@ -200,7 +200,7 @@ resource "kubernetes_ingress_v1" "esewa_ingress" {
           path_type = "Prefix"
           backend {
             service {
-              name = kubernetes_service.esewa_svc.metadata[0].name
+              name = kubernetes_service.esewa_nodeport.metadata[0].name
               port {
                 number = 8080
               }
