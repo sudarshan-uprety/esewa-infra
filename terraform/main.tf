@@ -132,12 +132,6 @@ resource "helm_release" "nginx_ingress" {
     value = "2"
   }
   
-  # Disable HTTPS for simplicity (enable for production)
-  set {
-    name  = "controller.service.ports.https"
-    value = "null"  # Disable HTTPS
-  }
-  
   # Wait for installation to complete
   wait = true
   
