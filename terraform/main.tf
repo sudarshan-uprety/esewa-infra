@@ -316,6 +316,7 @@ resource "null_resource" "kibana_cleanup" {
       kubectl delete role pre-install-kibana-kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
       kubectl delete rolebinding pre-install-kibana-kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
       kubectl delete job pre-install-kibana-kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
+      kubectl delete secret -l owner=helm,name=kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
     EOT
   }
 
