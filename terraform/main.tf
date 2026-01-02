@@ -285,18 +285,27 @@ resource "helm_release" "elasticsearch" {
   namespace  = kubernetes_namespace.elk_stack.metadata[0].name
   version    = "8.5.1"  # Use latest stable
 
-  # Use your YAML file
   values = [
     file("${path.module}/helm-values/elasticsearch-values.yaml")
   ]
+
+  wait_for_jobs = true
+  
+  # ✅ CREATE KUBERNETES RESOURCE TO WAIT FOR ELASTICSEARCH
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Waiting for Elasticsearch to be ready..."
+      kubectl wait --namespace ${self.namespace} \
+        --for=condition=ready pod \
+        --selector=app=elasticsearch-master \
+        --timeout=300s
+    EOT
+  }
 
   depends_on = [
     kubernetes_namespace.elk_stack,
     azurerm_kubernetes_cluster_node_pool.workernode
   ]
-
-  wait    = true
-  timeout = 900  # 15 minutes
 }
 
 # Deploy Kibana using external YAML
@@ -332,4 +341,13 @@ resource "helm_release" "filebeat" {
   ]
   
   depends_on = [helm_release.elasticsearch]
+}
+
+# CREATE NULL RESOURCE TO TRACK ELASTICSEARCH READINESS
+resource "null_resource" "elasticsearch_ready" {
+  depends_on = [helm_release.elasticsearch]
+  
+  triggers = {
+    elasticsearch_id = helm_release.elasticsearch.id
+  }
 }
