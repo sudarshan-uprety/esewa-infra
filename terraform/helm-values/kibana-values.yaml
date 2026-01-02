@@ -34,7 +34,3 @@ extraEnvs:
       secretKeyRef:
         name: "elasticsearch-master-credentials"
         key: "password"
-
-serviceAccount:
-  create: false
-  name: "default"
