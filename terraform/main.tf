@@ -316,43 +316,34 @@ resource "helm_release" "kibana" {
   namespace  = kubernetes_namespace.elk_stack.metadata[0].name
   version    = "8.5.1"
   
-  # ULTRA SIMPLE VALUES - NO CONFLICTS
+  # Use external YAML file
   values = [
-    <<-YAML
-    service:
-      type: LoadBalancer
-    elasticsearchHosts: ["http://elasticsearch-master:9200"]
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "512Mi"
-    YAML
+    file("${path.module}/helm-values/kibana-values.yaml")
   ]
   
-  # 🔥 DISABLE ALL HOOKS AND AUTOMATIC RESOURCES
+  skip_crds = true
+  
   set {
     name  = "serviceAccount.create"
     value = "false"
   }
   
   set {
-    name  = "rbac.create"
-    value = "false"
+    name  = "serviceAccount.name"
+    value = "default"  # Use default service account
   }
   
   set {
-    name  = "psp.create"
-    value = "false"
+    name  = "hooks"
+    value = "null"
   }
   
-  # Skip CRDs and hooks
-  skip_crds = true
+  wait_for_jobs = false
   
   depends_on = [helm_release.elasticsearch]
   
-  # Wait for deployment
-  wait    = true
-  timeout = 300
+  wait    = false
+  timeout = 120
 }
 
 
