@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 2.0"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.0"
+    }
   }
 }
 
@@ -63,6 +67,7 @@ resource "azurerm_kubernetes_cluster" "esewa" {
   }
 }
 
+
 # Additional worker node pool
 resource "azurerm_kubernetes_cluster_node_pool" "workernode" {
   name                  = "workernode"
@@ -85,11 +90,62 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.esewa.kube_config.0.cluster_ca_certificate)
 }
 
+# helm provider
+provider "helm" {
+  kubernetes {
+    host                   = azurerm_kubernetes_cluster.esewa.kube_config.0.host
+    client_certificate     = base64decode(azurerm_kubernetes_cluster.esewa.kube_config.0.client_certificate)
+    client_key             = base64decode(azurerm_kubernetes_cluster.esewa.kube_config.0.client_key)
+    cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.esewa.kube_config.0.cluster_ca_certificate)
+  }
+}
+
 # Namespace
 resource "kubernetes_namespace" "esewans" {
   metadata {
     name = var.namespace_name
   }
+}
+
+resource "helm_release" "nginx_ingress" {
+  name       = "nginx-ingress"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "ingress-nginx"
+  create_namespace = true
+  
+  # Configure as LoadBalancer for external access
+  set {
+    name  = "controller.service.type"
+    value = "LoadBalancer"
+  }
+  
+  # Health check for Azure Load Balancer
+  set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/azure-load-balancer-health-probe-request-path"
+    value = "/healthz"
+  }
+  
+  # Run 2 replicas for high availability
+  set {
+    name  = "controller.replicaCount"
+    value = "2"
+  }
+  
+  # Disable HTTPS for simplicity (enable for production)
+  set {
+    name  = "controller.service.ports.https"
+    value = "null"  # Disable HTTPS
+  }
+  
+  # Wait for installation to complete
+  wait = true
+  
+  # Dependencies: Install AFTER AKS cluster is ready
+  depends_on = [
+    azurerm_kubernetes_cluster.esewa,
+    azurerm_kubernetes_cluster_node_pool.workernode
+  ]
 }
 
 # Kubernetes Deployment (Java App)
