@@ -322,6 +322,8 @@ resource "helm_release" "kibana" {
   ]
   
   skip_crds = true
+  force_update    = true
+  cleanup_on_fail = true
   
   set {
     name  = "serviceAccount.create"
@@ -331,11 +333,6 @@ resource "helm_release" "kibana" {
   set {
     name  = "serviceAccount.name"
     value = "default"  # Use default service account
-  }
-  
-  set {
-    name  = "hooks"
-    value = "null"
   }
   
   wait_for_jobs = false
@@ -360,28 +357,28 @@ resource "helm_release" "filebeat" {
   ]
   
   set {
-    name  = "daemonset.extraVolumeMounts"
-    value = "null"  # Use null instead of []
+    name  = "extraEnvs[0].name"
+    value = "ELASTICSEARCH_USERNAME"
   }
   
   set {
-    name  = "daemonset.extraVolumes"
-    value = "null"  # Use null instead of []
+    name  = "extraEnvs[0].value"
+    value = "elastic"
   }
-  
+
   set {
-    name  = "extraVolumeMounts"
-    value = "null"
+    name  = "extraEnvs[1].name"
+    value = "ELASTICSEARCH_PASSWORD"
   }
-  
+
   set {
-    name  = "extraVolumes"
-    value = "null"
+    name  = "extraEnvs[1].valueFrom.secretKeyRef.name"
+    value = "elasticsearch-master-credentials"
   }
-  
+
   set {
-    name  = "extraEnvs"
-    value = "null"
+    name  = "extraEnvs[1].valueFrom.secretKeyRef.key"
+    value = "password"
   }
   
   depends_on = [helm_release.elasticsearch]
