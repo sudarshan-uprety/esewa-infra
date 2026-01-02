@@ -316,15 +316,18 @@ resource "helm_release" "kibana" {
   namespace  = kubernetes_namespace.elk_stack.metadata[0].name
   version    = "8.5.1"
   
-  # Use external YAML file
   values = [
     file("${path.module}/helm-values/kibana-values.yaml")
   ]
   
+  skip_crds = true
+  
+  wait_for_jobs = false
+  
   depends_on = [helm_release.elasticsearch]
   
-  wait    = true
-  timeout = 300
+  wait    = false
+  timeout = 120
 }
 
 # Deploy Filebeat using external YAML
@@ -336,38 +339,37 @@ resource "helm_release" "filebeat" {
   version    = "8.5.1"
   
   values = [
-    file("${path.module}/helm-values/filebeat-values.yaml"),
-    # 🔥 ADD ENVIRONMENT VARIABLES
-    yamlencode({
-      extraEnvs = [
-        {
-          name  = "ELASTICSEARCH_USERNAME"
-          value = "elastic"  # Default Elasticsearch username
-        },
-        {
-          name  = "ELASTICSEARCH_PASSWORD"
-          valueFrom = {
-            secretKeyRef = {
-              name = "elasticsearch-master-credentials"
-              key  = "password"
-            }
-          }
-        }
-      ]
-    })
+    file("${path.module}/helm-values/filebeat-values.yaml")
   ]
   
   set {
     name  = "daemonset.extraVolumeMounts"
-    value = "[]"
+    value = "null"  # Use null instead of []
   }
   
   set {
     name  = "daemonset.extraVolumes"
-    value = "[]"
+    value = "null"  # Use null instead of []
+  }
+  
+  set {
+    name  = "extraVolumeMounts"
+    value = "null"
+  }
+  
+  set {
+    name  = "extraVolumes"
+    value = "null"
+  }
+  
+  set {
+    name  = "extraEnvs"
+    value = "null"
   }
   
   depends_on = [helm_release.elasticsearch]
+  
+  wait = false  # Install async
 }
 
 # CREATE NULL RESOURCE TO TRACK ELASTICSEARCH READINESS
