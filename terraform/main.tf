@@ -32,7 +32,7 @@ resource "kubernetes_secret" "docker_registry" {
   }
 
   type = "kubernetes.io/dockerconfigjson"
-  
+
   data = {
     ".dockerconfigjson" = jsonencode({
       auths = {
@@ -108,33 +108,33 @@ resource "kubernetes_namespace" "esewans" {
 }
 
 resource "helm_release" "nginx_ingress" {
-  name       = "nginx-ingress"
-  repository = "https://kubernetes.github.io/ingress-nginx"
-  chart      = "ingress-nginx"
-  namespace  = "ingress-nginx"
+  name             = "nginx-ingress"
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  namespace        = "ingress-nginx"
   create_namespace = true
-  
+
   # Configure as LoadBalancer for external access
   set {
     name  = "controller.service.type"
     value = "LoadBalancer"
   }
-  
+
   # Health check for Azure Load Balancer
   set {
     name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/azure-load-balancer-health-probe-request-path"
     value = "/healthz"
   }
-  
+
   # Run 2 replicas for high availability
   set {
     name  = "controller.replicaCount"
     value = "2"
   }
-  
+
   # Wait for installation to complete
   wait = true
-  
+
   # Dependencies: Install AFTER AKS cluster is ready
   depends_on = [
     azurerm_kubernetes_cluster.esewa,
@@ -223,9 +223,9 @@ resource "kubernetes_service" "esewa_nodeport" {
     selector = { app = "esewa-app" }
     port {
       name        = "http"
-      port        = 8080        # Service port
-      target_port = 8080        # Container port
-      node_port   = 30081      # Node port (external access via LoadBalancer)
+      port        = 8080  # Service port
+      target_port = 8080  # Container port
+      node_port   = 30081 # Node port (external access via LoadBalancer)
       protocol    = "TCP"
     }
     type = "NodePort"
@@ -241,7 +241,7 @@ resource "kubernetes_ingress_v1" "esewa_ingress" {
       "nginx.ingress.kubernetes.io/rewrite-target" = "/"
     }
   }
-  
+
   spec {
     rule {
       host = "esewa.sudarshan-uprety.com.np"
@@ -283,14 +283,14 @@ resource "helm_release" "elasticsearch" {
   repository = "https://helm.elastic.co"
   chart      = "elasticsearch"
   namespace  = kubernetes_namespace.elk_stack.metadata[0].name
-  version    = "8.5.1"  # Use latest stable
+  version    = "8.5.1" # Use latest stable
 
   values = [
     file("${path.module}/helm-values/elasticsearch-values.yaml")
   ]
 
   wait_for_jobs = true
-  
+
   # ✅ CREATE KUBERNETES RESOURCE TO WAIT FOR ELASTICSEARCH
   provisioner "local-exec" {
     command = <<-EOT
@@ -308,25 +308,6 @@ resource "helm_release" "elasticsearch" {
   ]
 }
 
-# Cleanup conflicting Kibana resources before installation
-resource "null_resource" "kibana_cleanup" {
-  provisioner "local-exec" {
-    command = <<-EOT
-      kubectl delete configmap kibana-kibana-helm-scripts -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
-      kubectl delete role pre-install-kibana-kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
-      kubectl delete rolebinding pre-install-kibana-kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
-      kubectl delete job pre-install-kibana-kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
-      kubectl delete secret -l owner=helm,name=kibana -n ${kubernetes_namespace.elk_stack.metadata[0].name} --ignore-not-found
-    EOT
-  }
-
-  triggers = {
-    # Run whenever the elasticsearch release changes or if we need a fresh start
-    elasticsearch_id = helm_release.elasticsearch.id
-  }
-
-  depends_on = [kubernetes_namespace.elk_stack]
-}
 
 # Deploy Kibana using external YAML
 resource "helm_release" "kibana" {
@@ -335,26 +316,23 @@ resource "helm_release" "kibana" {
   chart      = "kibana"
   namespace  = kubernetes_namespace.elk_stack.metadata[0].name
   version    = "8.5.1"
-  
+
   # Use external YAML file
   values = [
     file("${path.module}/helm-values/kibana-values.yaml")
   ]
-  
-  skip_crds = true
+
+  skip_crds       = true
   force_update    = true
   cleanup_on_fail = true
-  
+
   disable_openapi_validation = true
   disable_webhooks           = true
-  
+
   wait_for_jobs = false
-  
-  depends_on = [
-    helm_release.elasticsearch,
-    null_resource.kibana_cleanup
-  ]
-  
+
+  depends_on = [helm_release.elasticsearch]
+
   wait    = true
   timeout = 600
 }
@@ -367,16 +345,16 @@ resource "helm_release" "filebeat" {
   chart      = "filebeat"
   namespace  = kubernetes_namespace.elk_stack.metadata[0].name
   version    = "8.5.1"
-  
+
   values = [
     file("${path.module}/helm-values/filebeat-values.yaml")
   ]
-  
+
   set {
     name  = "extraEnvs[0].name"
     value = "ELASTICSEARCH_USERNAME"
   }
-  
+
   set {
     name  = "extraEnvs[0].value"
     value = "elastic"
@@ -396,16 +374,16 @@ resource "helm_release" "filebeat" {
     name  = "extraEnvs[1].valueFrom.secretKeyRef.key"
     value = "password"
   }
-  
+
   depends_on = [helm_release.elasticsearch]
-  
-  wait = false  # Install async
+
+  wait = false # Install async
 }
 
 # CREATE NULL RESOURCE TO TRACK ELASTICSEARCH READINESS
 resource "null_resource" "elasticsearch_ready" {
   depends_on = [helm_release.elasticsearch]
-  
+
   triggers = {
     elasticsearch_id = helm_release.elasticsearch.id
   }

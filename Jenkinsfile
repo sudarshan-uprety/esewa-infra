@@ -54,6 +54,13 @@ pipeline {
                         terraform state rm 'kubernetes_ingress_v1.esewa_ingress' || true
                         terraform state rm 'helm_release.kibana' || true
 
+                        # Aggressively clean up stuck Kibana resources and Helm secrets
+                        kubectl delete secret -l owner=helm,name=kibana -n elk-stack --ignore-not-found
+                        kubectl delete configmap kibana-kibana-helm-scripts -n elk-stack --ignore-not-found
+                        kubectl delete role pre-install-kibana-kibana -n elk-stack --ignore-not-found
+                        kubectl delete rolebinding pre-install-kibana-kibana -n elk-stack --ignore-not-found
+                        kubectl delete job pre-install-kibana-kibana -n elk-stack --ignore-not-found
+
                         # Import them back with the correct identity
                         terraform import 'kubernetes_deployment.esewa_app' esewans/esewa-app || true
                         terraform import 'kubernetes_service.esewa_svc' esewans/esewa-service || true
@@ -61,7 +68,6 @@ pipeline {
 
                         # NEW: Import existing ELK Helm releases ---
                         terraform import 'helm_release.elasticsearch' elk-stack/elasticsearch || true
-                        terraform import 'helm_release.kibana' elk-stack/kibana || true
                         terraform import 'helm_release.filebeat' elk-stack/filebeat || true
 
                         # Plan & apply with all variables
