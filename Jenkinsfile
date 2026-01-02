@@ -52,6 +52,7 @@ pipeline {
                         terraform state rm 'kubernetes_deployment.esewa_app' || true
                         terraform state rm 'kubernetes_service.esewa_svc' || true
                         terraform state rm 'kubernetes_ingress_v1.esewa_ingress' || true
+                        terraform state rm 'helm_release.kibana' || true
 
                         # Import them back with the correct identity
                         terraform import 'kubernetes_deployment.esewa_app' esewans/esewa-app || true
