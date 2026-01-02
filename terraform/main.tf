@@ -266,3 +266,133 @@ resource "kubernetes_ingress_v1" "esewa_ingress" {
     delete = "5m"
   }
 }
+
+
+resource "kubernetes_namespace" "elk_stack" {
+  metadata {
+    name = "elk-stack"
+    labels = {
+      name        = "elk-stack"
+      environment = "production"
+    }
+  }
+}
+
+
+
+# Elasticsearch password
+resource "random_password" "elasticsearch_password" {
+  length           = 16
+  special          = true
+  override_special = "!@#$%^&*()-_=+[]{}|;:,.<>?"
+}
+
+# Elasticsearch credentials secret
+resource "kubernetes_secret" "elasticsearch_credentials" {
+  metadata {
+    name      = "elasticsearch-master-credentials"
+    namespace = kubernetes_namespace.elk_stack.metadata[0].name
+  }
+
+  data = {
+    username = "elastic"
+    password = random_password.elasticsearch_password.result
+  }
+
+  depends_on = [kubernetes_namespace.elk_stack]
+}
+
+resource "helm_release" "elasticsearch" {
+  name       = "elasticsearch"
+  repository = "https://helm.elastic.co"
+  chart      = "elasticsearch"
+  namespace  = kubernetes_namespace.elk_stack.metadata[0].name
+  version    = "8.5.1"  # Use latest stable
+
+  # Use your YAML file
+  values = [
+    file("${path.module}/helm-values/elasticsearch-values.yaml")
+  ]
+
+  # Set Elasticsearch password from secret
+  set_sensitive {
+    name  = "elasticsearchPassword"
+    value = random_password.elasticsearch_password.result
+  }
+
+  set_sensitive {
+    name  = "extraEnvs[0].name"
+    value = "ELASTIC_PASSWORD"
+  }
+
+  set_sensitive {
+    name  = "extraEnvs[0].value"
+    value = random_password.elasticsearch_password.result
+  }
+
+  depends_on = [
+    kubernetes_namespace.elk_stack,
+    azurerm_kubernetes_cluster_node_pool.workernode
+  ]
+
+  wait    = true
+  timeout = 900  # 15 minutes
+}
+
+# Deploy Kibana using external YAML
+resource "helm_release" "kibana" {
+  name       = "kibana"
+  repository = "https://helm.elastic.co"
+  chart      = "kibana"
+  namespace  = kubernetes_namespace.elk_stack.metadata[0].name
+  version    = "8.5.1"
+  
+  # Use external YAML file
+  values = [
+    file("${path.module}/helm-values/kibana-values.yaml")
+  ]
+  
+  depends_on = [helm_release.elasticsearch]
+  
+  wait    = true
+  timeout = 300
+}
+
+# Deploy Filebeat using external YAML
+resource "helm_release" "filebeat" {
+  name       = "filebeat"
+  repository = "https://helm.elastic.co"
+  chart      = "filebeat"
+  namespace  = kubernetes_namespace.elk_stack.metadata[0].name
+  version    = "8.5.1"
+  
+  # Use external YAML file + dynamic values
+  values = [
+    file("${path.module}/helm-values/filebeat-values.yaml"),
+    # Additional dynamic values
+    yamlencode({
+      env = [
+        {
+          name = "ELASTICSEARCH_USERNAME"
+          valueFrom = {
+            secretKeyRef = {
+              name = kubernetes_secret.elasticsearch_credentials.metadata[0].name
+              key  = "username"
+            }
+          }
+        },
+        {
+          name = "ELASTICSEARCH_PASSWORD"
+          valueFrom = {
+            secretKeyRef = {
+              name = kubernetes_secret.elasticsearch_credentials.metadata[0].name
+              key  = "password"
+            }
+          }
+        }
+      ]
+    })
+  ]
+  
+  depends_on = [helm_release.elasticsearch]
+}
