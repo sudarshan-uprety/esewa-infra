@@ -278,30 +278,6 @@ resource "kubernetes_namespace" "elk_stack" {
   }
 }
 
-
-
-# Elasticsearch password
-resource "random_password" "elasticsearch_password" {
-  length           = 16
-  special          = true
-  override_special = "!@#$%^&*()-_=+[]{}|;:,.<>?"
-}
-
-# Elasticsearch credentials secret
-resource "kubernetes_secret" "elasticsearch_credentials" {
-  metadata {
-    name      = "elasticsearch-master-credentials"
-    namespace = kubernetes_namespace.elk_stack.metadata[0].name
-  }
-
-  data = {
-    username = "elastic"
-    password = random_password.elasticsearch_password.result
-  }
-
-  depends_on = [kubernetes_namespace.elk_stack]
-}
-
 resource "helm_release" "elasticsearch" {
   name       = "elasticsearch"
   repository = "https://helm.elastic.co"
@@ -313,22 +289,6 @@ resource "helm_release" "elasticsearch" {
   values = [
     file("${path.module}/helm-values/elasticsearch-values.yaml")
   ]
-
-  # Set Elasticsearch password from secret
-  set_sensitive {
-    name  = "elasticsearchPassword"
-    value = random_password.elasticsearch_password.result
-  }
-
-  set_sensitive {
-    name  = "extraEnvs[0].name"
-    value = "ELASTIC_PASSWORD"
-  }
-
-  set_sensitive {
-    name  = "extraEnvs[0].value"
-    value = random_password.elasticsearch_password.result
-  }
 
   depends_on = [
     kubernetes_namespace.elk_stack,
@@ -368,30 +328,7 @@ resource "helm_release" "filebeat" {
   
   # Use external YAML file + dynamic values
   values = [
-    file("${path.module}/helm-values/filebeat-values.yaml"),
-    # Additional dynamic values
-    yamlencode({
-      env = [
-        {
-          name = "ELASTICSEARCH_USERNAME"
-          valueFrom = {
-            secretKeyRef = {
-              name = kubernetes_secret.elasticsearch_credentials.metadata[0].name
-              key  = "username"
-            }
-          }
-        },
-        {
-          name = "ELASTICSEARCH_PASSWORD"
-          valueFrom = {
-            secretKeyRef = {
-              name = kubernetes_secret.elasticsearch_credentials.metadata[0].name
-              key  = "password"
-            }
-          }
-        }
-      ]
-    })
+    file("${path.module}/helm-values/filebeat-values.yaml")
   ]
   
   depends_on = [helm_release.elasticsearch]
