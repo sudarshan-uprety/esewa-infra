@@ -1,5 +1,4 @@
 replicas: 1
-minimumMasterNodes: 1
 
 resources:
   requests:
@@ -18,9 +17,9 @@ esConfig:
     xpack.security.enabled: false
     xpack.security.transport.ssl.enabled: false
 
-# extraEnvs:
-#   - name: ES_SETTING_CLUSTER_INITIAL_MASTER_NODES
-#     value: ""
+# No cluster.initial_master_nodes
+# No minimumMasterNodes
+# No extraEnvs
 
 xpack:
   license:
