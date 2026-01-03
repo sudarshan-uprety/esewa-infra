@@ -17,5 +17,3 @@ protocol: http
 createCert: false
 secretMounts: []
 elasticsearchCertificateAuthoritiesFile: ""
-envFrom: []
-extraEnvs: []
