@@ -238,6 +238,28 @@ resource "helm_release" "logstash" {
   timeout = 600
 }
 
+# Deploy Filebeat using external YAML
+resource "helm_release" "filebeat" {
+  name       = "filebeat"
+  repository = "https://helm.elastic.co"
+  chart      = "filebeat"
+  namespace  = kubernetes_namespace.elk_stack.metadata[0].name
+  version    = "8.5.1"
+
+  values = [
+    file("${path.module}/helm-values/filebeat-values.yaml")
+  ]
+
+  depends_on = [
+    helm_release.elasticsearch,
+    null_resource.elasticsearch_ready,
+    helm_release.logstash
+  ]
+
+  wait    = false
+  timeout = 600
+}
+
 # CREATE NULL RESOURCE TO TRACK ELASTICSEARCH READINESS
 resource "null_resource" "elasticsearch_ready" {
   depends_on = [helm_release.elasticsearch]

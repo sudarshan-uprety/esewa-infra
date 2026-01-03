@@ -70,7 +70,7 @@ pipeline {
 
                         # NEW: Import existing ELK Helm releases ---
                         terraform import 'helm_release.elasticsearch' elk-stack/elasticsearch || true
-                        # terraform import 'helm_release.filebeat' elk-stack/filebeat || true
+                        terraform import 'helm_release.filebeat' elk-stack/filebeat || true
 
                         # Plan & apply with all variables
                         terraform plan -out=tfplan \\

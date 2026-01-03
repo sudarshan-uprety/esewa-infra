@@ -14,11 +14,8 @@ filebeatConfig:
             - logs_path:
                 logs_path: "/var/log/containers/"
 
-    output.elasticsearch:
-      hosts: ['https://elasticsearch-master:9200']
-      username: '${ELASTICSEARCH_USERNAME}'
-      password: '${ELASTICSEARCH_PASSWORD}'
-      ssl.verification_mode: none
+    output.logstash:
+      hosts: ["logstash-logstash:5044"]
 
     logging.level: info
 
