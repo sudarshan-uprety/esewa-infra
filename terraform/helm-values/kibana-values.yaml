@@ -8,12 +8,29 @@ resources:
     cpu: "100m"
     memory: "512Mi"
   limits:
-    cpu: "500m"
+    cpu: "1000m"
     memory: "1Gi"
 
 elasticsearchHosts: "http://elasticsearch-master:9200"
 
 protocol: http
-createCert: false
+
+elasticsearchCredentialSecret: "elasticsearch-master-credentials"
+
 secretMounts: []
+
 elasticsearchCertificateAuthoritiesFile: ""
+
+createCert: false
+
+readinessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 10
+
+livenessProbe:
+  initialDelaySeconds: 120
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 10
