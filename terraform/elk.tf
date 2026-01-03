@@ -217,16 +217,16 @@ resource "helm_release" "kibana" {
 }
 
 
-# Deploy Filebeat using external YAML
-resource "helm_release" "filebeat" {
-  name       = "filebeat"
+# Deploy Logstash using external YAML
+resource "helm_release" "logstash" {
+  name       = "logstash"
   repository = "https://helm.elastic.co"
-  chart      = "filebeat"
+  chart      = "logstash"
   namespace  = kubernetes_namespace.elk_stack.metadata[0].name
   version    = "8.5.1"
 
   values = [
-    file("${path.module}/helm-values/filebeat-values.yaml")
+    file("${path.module}/helm-values/logstash-values.yaml")
   ]
 
   depends_on = [
