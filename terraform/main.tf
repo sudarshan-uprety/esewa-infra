@@ -309,6 +309,54 @@ resource "helm_release" "elasticsearch" {
 }
 
 
+resource "null_resource" "setup_kibana_user" {
+  depends_on = [
+    helm_release.elasticsearch,
+    null_resource.elasticsearch_ready
+  ]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      # Wait for Elasticsearch to be fully ready
+      sleep 30
+      
+      # Get elastic password
+      ELASTIC_PASSWORD=$(kubectl get secret elasticsearch-master-credentials -n elk-stack -o jsonpath='{.data.password}' | base64 -d)
+      
+      # Set kibana_system user password
+      kubectl exec -n elk-stack elasticsearch-master-0 -- \
+        curl -X POST 'https://localhost:9200/_security/user/kibana_system/_password' \
+        -k -u "elastic:$ELASTIC_PASSWORD" \
+        -H 'Content-Type: application/json' \
+        -d '{"password": "KibanaPassword123!"}'
+      
+      echo "Kibana system user password set successfully"
+    EOT
+  }
+
+  triggers = {
+    elasticsearch_id = helm_release.elasticsearch.id
+  }
+}
+
+resource "kubernetes_secret" "kibana_credentials" {
+  metadata {
+    name      = "kibana-elasticsearch-credentials"
+    namespace = kubernetes_namespace.elk_stack.metadata[0].name
+  }
+
+  data = {
+    username = "kibana_system"
+    password = "KibanaPassword123!"
+  }
+
+  type = "Opaque"
+
+  depends_on = [null_resource.setup_kibana_user]
+}
+
+
+
 # Deploy Kibana using external YAML
 resource "helm_release" "kibana" {
   name       = "kibana"
@@ -344,11 +392,6 @@ resource "helm_release" "kibana" {
         enabled = false
       }
 
-      # DON'T add secretMounts - the chart handles it automatically
-
-      # Point to the CA file (not directory)
-      elasticsearchCertificateAuthoritiesFile = "/usr/share/kibana/config/certs/ca.crt"
-
       createCert = false
 
       extraEnvs = [
@@ -356,7 +399,7 @@ resource "helm_release" "kibana" {
           name = "ELASTICSEARCH_USERNAME"
           valueFrom = {
             secretKeyRef = {
-              name = "elasticsearch-master-credentials"
+              name = "kibana-elasticsearch-credentials"
               key  = "username"
             }
           }
@@ -365,10 +408,14 @@ resource "helm_release" "kibana" {
           name = "ELASTICSEARCH_PASSWORD"
           valueFrom = {
             secretKeyRef = {
-              name = "elasticsearch-master-credentials"
+              name = "kibana-elasticsearch-credentials"
               key  = "password"
             }
           }
+        },
+        {
+          name  = "ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES"
+          value = "/usr/share/kibana/config/certs/ca.crt"
         }
       ]
 
@@ -401,7 +448,8 @@ resource "helm_release" "kibana" {
 
   depends_on = [
     helm_release.elasticsearch,
-    null_resource.elasticsearch_ready
+    null_resource.elasticsearch_ready,
+    kubernetes_secret.kibana_credentials
   ]
 }
 
