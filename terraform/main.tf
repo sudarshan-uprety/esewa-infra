@@ -386,7 +386,7 @@ resource "helm_release" "kibana" {
 
       elasticsearchHosts = "https://elasticsearch-master:9200"
 
-      protocol = "https"
+      protocol = "http"
 
       serviceAccountToken = {
         enabled = false
@@ -419,7 +419,13 @@ resource "helm_release" "kibana" {
         }
       ]
 
+      # Custom readiness probe using HTTP
       readinessProbe = {
+        httpGet = {
+          path   = "/api/status"
+          port   = 5601
+          scheme = "HTTP"
+        }
         initialDelaySeconds = 60
         periodSeconds       = 10
         timeoutSeconds      = 5
@@ -427,6 +433,11 @@ resource "helm_release" "kibana" {
       }
 
       livenessProbe = {
+        httpGet = {
+          path   = "/api/status"
+          port   = 5601
+          scheme = "HTTP"
+        }
         initialDelaySeconds = 120
         periodSeconds       = 10
         timeoutSeconds      = 5
@@ -449,7 +460,8 @@ resource "helm_release" "kibana" {
   depends_on = [
     helm_release.elasticsearch,
     null_resource.elasticsearch_ready,
-    kubernetes_secret.kibana_credentials
+    kubernetes_secret.kibana_credentials,
+    kubernetes_secret.kibana_dummy_token
   ]
 }
 
