@@ -114,7 +114,8 @@ resource "helm_release" "kibana" {
       replicas = 1
 
       service = {
-        type = "LoadBalancer"
+        type     = "NodePort"
+        nodePort = 30561
       }
 
       resources = {
