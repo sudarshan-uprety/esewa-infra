@@ -163,12 +163,16 @@ resource "helm_release" "kibana" {
         }
       ]
 
-      # Custom readiness probe using HTTP
+      # Override the default probes completely
+      healthCheckPath = "/api/status"
+
       readinessProbe = {
-        httpGet = {
-          path   = "/api/status"
-          port   = 5601
-          scheme = "HTTP"
+        exec = {
+          command = [
+            "sh",
+            "-c",
+            "curl -f http://localhost:5601/api/status || exit 1"
+          ]
         }
         initialDelaySeconds = 60
         periodSeconds       = 10
@@ -177,10 +181,12 @@ resource "helm_release" "kibana" {
       }
 
       livenessProbe = {
-        httpGet = {
-          path   = "/api/status"
-          port   = 5601
-          scheme = "HTTP"
+        exec = {
+          command = [
+            "sh",
+            "-c",
+            "curl -f http://localhost:5601/api/status || exit 1"
+          ]
         }
         initialDelaySeconds = 120
         periodSeconds       = 10
