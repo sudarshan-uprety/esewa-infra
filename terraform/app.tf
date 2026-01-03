@@ -232,43 +232,45 @@ resource "kubernetes_ingress_v1" "elasticsearch_ingress" {
   }
 }
 
-# Optional: Kibana Ingress (if you want Kibana accessible via domain too)
-# resource "kubernetes_ingress_v1" "kibana_ingress" {
-#   metadata {
-#     name      = "kibana-ingress"
-#     namespace = kubernetes_namespace.elk_stack.metadata[0].name
-#     annotations = {
-#       "kubernetes.io/ingress.class" = "nginx"
-#     }
-#   }
+resource "kubernetes_ingress_v1" "kibana_ingress" {
+  metadata {
+    name      = "kibana-ingress"
+    namespace = kubernetes_namespace.elk_stack.metadata[0].name
+    annotations = {
+      "kubernetes.io/ingress.class"                       = "nginx"
+      "nginx.ingress.kubernetes.io/proxy-connect-timeout" = "300"
+      "nginx.ingress.kubernetes.io/proxy-send-timeout"    = "300"
+      "nginx.ingress.kubernetes.io/proxy-read-timeout"    = "300"
+    }
+  }
 
-#   spec {
-#     rule {
-#       host = "kibana.sudarshan-uprety.com.np"
-#       http {
-#         path {
-#           path      = "/"
-#           path_type = "Prefix"
-#           backend {
-#             service {
-#               name = "kibana-kibana"
-#               port {
-#                 number = 5601
-#               }
-#             }
-#           }
-#         }
-#       }
-#     }
-#   }
+  spec {
+    rule {
+      host = "kibana.sudarshan-uprety.com.np"
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = "kibana-kibana"
+              port {
+                number = 5601
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
-#   depends_on = [
-#     helm_release.kibana,
-#     helm_release.nginx_ingress
-#   ]
+  depends_on = [
+    helm_release.kibana,
+    helm_release.nginx_ingress
+  ]
 
-#   timeouts {
-#     create = "5m"
-#     delete = "5m"
-#   }
-# }
+  timeouts {
+    create = "5m"
+    delete = "5m"
+  }
+}
