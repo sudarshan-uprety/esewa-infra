@@ -356,6 +356,20 @@ resource "kubernetes_secret" "kibana_credentials" {
 }
 
 
+resource "kubernetes_secret" "kibana_dummy_token" {
+  metadata {
+    name      = "kibana-kibana-es-token"
+    namespace = kubernetes_namespace.elk_stack.metadata[0].name
+  }
+
+  data = {
+    token = ""
+  }
+
+  type = "Opaque"
+
+  depends_on = [kubernetes_namespace.elk_stack]
+}
 
 # Deploy Kibana using external YAML
 resource "helm_release" "kibana" {
