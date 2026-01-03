@@ -17,6 +17,9 @@ protocol: http
 
 elasticsearchCredentialSecret: "elasticsearch-master-credentials"
 
+serviceAccountToken:
+  enabled: false
+
 secretMounts: []
 
 elasticsearchCertificateAuthoritiesFile: ""
