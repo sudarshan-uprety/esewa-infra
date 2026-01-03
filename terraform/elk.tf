@@ -229,34 +229,13 @@ resource "helm_release" "filebeat" {
     file("${path.module}/helm-values/filebeat-values.yaml")
   ]
 
-  set {
-    name  = "extraEnvs[0].name"
-    value = "ELASTICSEARCH_USERNAME"
-  }
+  depends_on = [
+    helm_release.elasticsearch,
+    null_resource.elasticsearch_ready
+  ]
 
-  set {
-    name  = "extraEnvs[0].value"
-    value = "elastic"
-  }
-
-  set {
-    name  = "extraEnvs[1].name"
-    value = "ELASTICSEARCH_PASSWORD"
-  }
-
-  set {
-    name  = "extraEnvs[1].valueFrom.secretKeyRef.name"
-    value = "elasticsearch-master-credentials"
-  }
-
-  set {
-    name  = "extraEnvs[1].valueFrom.secretKeyRef.key"
-    value = "password"
-  }
-
-  depends_on = [helm_release.elasticsearch]
-
-  wait = false # Install async
+  wait    = false
+  timeout = 600
 }
 
 # CREATE NULL RESOURCE TO TRACK ELASTICSEARCH READINESS
