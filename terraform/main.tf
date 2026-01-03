@@ -336,7 +336,6 @@ resource "helm_release" "kibana" {
         }
       }
 
-      # Use HTTPS since Elasticsearch has SSL enabled
       elasticsearchHosts = "https://elasticsearch-master:9200"
 
       protocol = "https"
@@ -345,21 +344,13 @@ resource "helm_release" "kibana" {
         enabled = false
       }
 
-      # Mount the certificates
-      secretMounts = [
-        {
-          name       = "elasticsearch-certs"
-          secretName = "elasticsearch-master-certs"
-          path       = "/usr/share/kibana/config/certs"
-        }
-      ]
+      # DON'T add secretMounts - the chart handles it automatically
 
-      # CRITICAL: Point to the CA FILE, not directory
+      # Point to the CA file (not directory)
       elasticsearchCertificateAuthoritiesFile = "/usr/share/kibana/config/certs/ca.crt"
 
       createCert = false
 
-      # Use username/password instead of service account token
       extraEnvs = [
         {
           name = "ELASTICSEARCH_USERNAME"
