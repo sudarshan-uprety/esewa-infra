@@ -66,6 +66,8 @@ pipeline {
                         terraform import 'kubernetes_service.esewa_svc' esewans/esewa-service || true
                         terraform import 'kubernetes_ingress_v1.esewa_ingress' esewans/esewa-ingress || true
 
+                        terraform import kubernetes_secret.kibana_dummy_token elk-stack/kibana-kibana-es-token
+
                         # NEW: Import existing ELK Helm releases ---
                         terraform import 'helm_release.elasticsearch' elk-stack/elasticsearch || true
                         terraform import 'helm_release.filebeat' elk-stack/filebeat || true
