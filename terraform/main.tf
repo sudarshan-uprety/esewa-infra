@@ -318,30 +318,82 @@ resource "helm_release" "kibana" {
   version    = "8.5.1"
 
   values = [
-    file("${path.module}/helm-values/kibana-values.yaml")
+    yamlencode({
+      replicas = 1
+
+      service = {
+        type = "LoadBalancer"
+      }
+
+      resources = {
+        requests = {
+          cpu    = "100m"
+          memory = "512Mi"
+        }
+        limits = {
+          cpu    = "1000m"
+          memory = "1Gi"
+        }
+      }
+
+      elasticsearchHosts = "http://elasticsearch-master:9200"
+
+      protocol = "http"
+
+      # Disable service account token
+      serviceAccountToken = {
+        enabled = false
+      }
+
+      secretMounts = []
+
+      elasticsearchCertificateAuthoritiesFile = ""
+
+      createCert = false
+
+      # CRITICAL: Add environment variables to override the service account token
+      extraEnvs = [
+        {
+          name = "ELASTICSEARCH_USERNAME"
+          valueFrom = {
+            secretKeyRef = {
+              name = "elasticsearch-master-credentials"
+              key  = "username"
+            }
+          }
+        },
+        {
+          name = "ELASTICSEARCH_PASSWORD"
+          valueFrom = {
+            secretKeyRef = {
+              name = "elasticsearch-master-credentials"
+              key  = "password"
+            }
+          }
+        },
+        {
+          name  = "ELASTICSEARCH_SERVICEACCOUNTTOKEN"
+          value = ""
+        }
+      ]
+
+      readinessProbe = {
+        initialDelaySeconds = 60
+        periodSeconds       = 10
+        timeoutSeconds      = 5
+        failureThreshold    = 10
+      }
+
+      livenessProbe = {
+        initialDelaySeconds = 120
+        periodSeconds       = 10
+        timeoutSeconds      = 5
+        failureThreshold    = 10
+      }
+    })
   ]
 
   disable_webhooks = true
-
-  set {
-    name  = "serviceAccountToken.enabled"
-    value = "false"
-  }
-
-  set {
-    name  = "elasticsearchCredentialSecret"
-    value = "elasticsearch-master-credentials"
-  }
-
-  set {
-    name  = "protocol"
-    value = "http"
-  }
-
-  set {
-    name  = "elasticsearchCertificateAuthoritiesFile"
-    value = ""
-  }
 
   replace         = true
   force_update    = true
