@@ -184,3 +184,91 @@ resource "kubernetes_ingress_v1" "esewa_ingress" {
     delete = "5m"
   }
 }
+
+
+resource "kubernetes_ingress_v1" "elasticsearch_ingress" {
+  metadata {
+    name      = "elasticsearch-ingress"
+    namespace = kubernetes_namespace.elk_stack.metadata[0].name
+    annotations = {
+      "kubernetes.io/ingress.class"                       = "nginx"
+      "nginx.ingress.kubernetes.io/proxy-connect-timeout" = "600"
+      "nginx.ingress.kubernetes.io/proxy-send-timeout"    = "600"
+      "nginx.ingress.kubernetes.io/proxy-read-timeout"    = "600"
+      "nginx.ingress.kubernetes.io/proxy-body-size"       = "100m"
+      "nginx.ingress.kubernetes.io/backend-protocol"      = "HTTPS"
+      "nginx.ingress.kubernetes.io/proxy-ssl-verify"      = "false"
+    }
+  }
+
+  spec {
+    rule {
+      host = "elasticsearch.sudarshan-uprety.com.np"
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = "elasticsearch-master"
+              port {
+                number = 9200
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    helm_release.elasticsearch,
+    helm_release.nginx_ingress
+  ]
+
+  timeouts {
+    create = "5m"
+    delete = "5m"
+  }
+}
+
+# Optional: Kibana Ingress (if you want Kibana accessible via domain too)
+# resource "kubernetes_ingress_v1" "kibana_ingress" {
+#   metadata {
+#     name      = "kibana-ingress"
+#     namespace = kubernetes_namespace.elk_stack.metadata[0].name
+#     annotations = {
+#       "kubernetes.io/ingress.class" = "nginx"
+#     }
+#   }
+
+#   spec {
+#     rule {
+#       host = "kibana.sudarshan-uprety.com.np"
+#       http {
+#         path {
+#           path      = "/"
+#           path_type = "Prefix"
+#           backend {
+#             service {
+#               name = "kibana-kibana"
+#               port {
+#                 number = 5601
+#               }
+#             }
+#           }
+#         }
+#       }
+#     }
+#   }
+
+#   depends_on = [
+#     helm_release.kibana,
+#     helm_release.nginx_ingress
+#   ]
+
+#   timeouts {
+#     create = "5m"
+#     delete = "5m"
+#   }
+# }
