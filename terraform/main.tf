@@ -321,11 +321,19 @@ resource "helm_release" "kibana" {
     file("${path.module}/helm-values/kibana-values.yaml")
   ]
 
+  replace         = true
+  force_update    = true
+  cleanup_on_fail = true
+  recreate_pods   = true
+
   wait          = true
-  timeout       = 600
+  timeout       = 900
   wait_for_jobs = false
 
-  depends_on = [helm_release.elasticsearch]
+  depends_on = [
+    helm_release.elasticsearch,
+    null_resource.elasticsearch_ready
+  ]
 }
 
 
