@@ -323,7 +323,7 @@ resource "helm_release" "kibana" {
 
   wait          = true
   timeout       = 600
-  wait_for_jobs = true
+  wait_for_jobs = false
 
   depends_on = [helm_release.elasticsearch]
 }
