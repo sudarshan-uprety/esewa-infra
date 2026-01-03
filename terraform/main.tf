@@ -336,22 +336,30 @@ resource "helm_release" "kibana" {
         }
       }
 
-      elasticsearchHosts = "http://elasticsearch-master:9200"
+      # Use HTTPS since Elasticsearch has SSL enabled
+      elasticsearchHosts = "https://elasticsearch-master:9200"
 
-      protocol = "http"
+      protocol = "https"
 
-      # Disable service account token
       serviceAccountToken = {
         enabled = false
       }
 
-      secretMounts = []
+      # Mount the certificates
+      secretMounts = [
+        {
+          name       = "elasticsearch-certs"
+          secretName = "elasticsearch-master-certs"
+          path       = "/usr/share/kibana/config/certs"
+        }
+      ]
 
-      elasticsearchCertificateAuthoritiesFile = ""
+      # CRITICAL: Point to the CA FILE, not directory
+      elasticsearchCertificateAuthoritiesFile = "/usr/share/kibana/config/certs/ca.crt"
 
       createCert = false
 
-      # CRITICAL: Add environment variables to override the service account token
+      # Use username/password instead of service account token
       extraEnvs = [
         {
           name = "ELASTICSEARCH_USERNAME"
@@ -370,10 +378,6 @@ resource "helm_release" "kibana" {
               key  = "password"
             }
           }
-        },
-        {
-          name  = "ELASTICSEARCH_SERVICEACCOUNTTOKEN"
-          value = ""
         }
       ]
 
