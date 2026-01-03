@@ -32,6 +32,10 @@ logstashPipeline:
         password => "n1q4iLxVtsLWSz47"
         ssl => true
         ssl_certificate_verification => false
+        
+        data_stream => "false"
+        
+        index => "filebeat-%{+YYYY.MM.dd}"
       }
     }
 
