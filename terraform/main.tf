@@ -317,24 +317,15 @@ resource "helm_release" "kibana" {
   namespace  = kubernetes_namespace.elk_stack.metadata[0].name
   version    = "8.5.1"
 
-  # Use external YAML file
   values = [
     file("${path.module}/helm-values/kibana-values.yaml")
   ]
 
-  skip_crds       = true
-  force_update    = true
-  cleanup_on_fail = true
-
-  disable_openapi_validation = true
-  disable_webhooks           = true
-
+  wait          = true
+  timeout       = 600
   wait_for_jobs = true
 
   depends_on = [helm_release.elasticsearch]
-
-  wait    = true
-  timeout = 600
 }
 
 
