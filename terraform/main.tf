@@ -321,6 +321,28 @@ resource "helm_release" "kibana" {
     file("${path.module}/helm-values/kibana-values.yaml")
   ]
 
+  disable_webhooks = true
+
+  set {
+    name  = "serviceAccountToken.enabled"
+    value = "false"
+  }
+
+  set {
+    name  = "elasticsearchCredentialSecret"
+    value = "elasticsearch-master-credentials"
+  }
+
+  set {
+    name  = "protocol"
+    value = "http"
+  }
+
+  set {
+    name  = "elasticsearchCertificateAuthoritiesFile"
+    value = ""
+  }
+
   replace         = true
   force_update    = true
   cleanup_on_fail = true
