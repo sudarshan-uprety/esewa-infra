@@ -21,7 +21,7 @@ resource "helm_release" "elasticsearch" {
 
   wait_for_jobs = true
 
-  # ✅ CREATE KUBERNETES RESOURCE TO WAIT FOR ELASTICSEARCH
+  # CREATE KUBERNETES RESOURCE TO WAIT FOR ELASTICSEARCH
   provisioner "local-exec" {
     command = <<-EOT
       echo "Waiting for Elasticsearch to be ready..."

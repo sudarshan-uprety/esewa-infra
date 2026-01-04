@@ -2,7 +2,6 @@ replicas: 1
 clusterName: "elasticsearch"
 nodeGroup: "master"
 
-# ✅ This tells the chart it's single-node
 minimumMasterNodes: 1
 
 resources:
